@@ -1,6 +1,6 @@
 -- =============================================
 -- ⚠️ VOID SCRIPTS - CHEST FARM V1.0.0.0.2
--- Discord Gate (Anti-Bypass) - No Logo
+-- WITH KEY SYSTEM (SHRTFLY FORMAT)
 -- =============================================
 
 repeat task.wait() until game:IsLoaded()
@@ -13,222 +13,516 @@ local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Player = Players.LocalPlayer
-local DISCORD_LINK = "https://discord.gg/GfFMUANJQP"
 
--- ==================== ANTI-BYPASS FLAG ====================
-getgenv().VoidDiscordPassed = false
+-- ==================== KEY SYSTEM CONFIG ====================
+local KeyConfig = {
+    KeyLink = "https://shrtslug.biz/944mp",
+    DiscordLink = "https://discord.gg/GfFMUANJQP"
+}
 
--- ==================== FREEZE CHARACTER ====================
-local function FreezePlayer(state)
-    local char = Player.Character
-    if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = state and 0 or 16
-        hum.JumpPower = state and 0 or 50
-        hum.JumpHeight = state and 0 or 7.2
+-- ==================== KEY SYSTEM ====================
+local KeySystem = {
+    IsAuthenticated = false,
+    UserTier = "user"
+}
+
+-- ==================== KEY SYSTEM UI ====================
+local function ShowKeySystem()
+    if CoreGui:FindFirstChild("VoidKeySystem") then
+        CoreGui.VoidKeySystem:Destroy()
     end
-end
-
--- ==================== DISCORD GATE ====================
-local function CreateDiscordGate()
+    
     if CoreGui:FindFirstChild("VoidDiscordGate") then
         CoreGui.VoidDiscordGate:Destroy()
     end
-
-    local GateGui = Instance.new("ScreenGui")
-    GateGui.Name = "VoidDiscordGate"
-    GateGui.ResetOnSpawn = false
-    GateGui.IgnoreGuiInset = true
-    GateGui.DisplayOrder = 999999
-    GateGui.Parent = CoreGui
-
-    -- Fullscreen black overlay
-    local Overlay = Instance.new("Frame")
-    Overlay.Size = UDim2.new(1, 0, 1, 0)
-    Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Overlay.BackgroundTransparency = 0.25
-    Overlay.BorderSizePixel = 0
-    Overlay.Parent = GateGui
-
-    -- ==================== GATE PANEL ====================
-    local GateFrame = Instance.new("Frame")
-    GateFrame.Size = UDim2.new(0, 380, 0, 260)
-    GateFrame.Position = UDim2.new(0.5, -190, 0.5, -130)
-    GateFrame.BackgroundColor3 = Color3.fromRGB(0, 2, 8)
-    GateFrame.BorderSizePixel = 0
-    GateFrame.Parent = GateGui
-
-    local GateCorner = Instance.new("UICorner", GateFrame)
-    GateCorner.CornerRadius = UDim.new(0, 10)
-
-    -- Glow layers
-    for i = 1, 3 do
-        local glow = Instance.new("Frame")
-        glow.Size = UDim2.new(1, i * 6, 1, i * 6)
-        glow.Position = UDim2.new(0, -i * 3, 0, -i * 3)
-        glow.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
-        glow.BackgroundTransparency = 0.85 + (i * 0.04)
-        glow.BorderSizePixel = 0
-        glow.ZIndex = 0
-        glow.Parent = GateFrame
-        local gCorner = Instance.new("UICorner", glow)
-        gCorner.CornerRadius = UDim.new(0, 12 + i)
+    
+    if CoreGui:FindFirstChild("VoidChestUI") then
+        CoreGui.VoidChestUI:Destroy()
     end
 
-    local GateTitle = Instance.new("TextLabel")
-    GateTitle.Size = UDim2.new(1, -20, 0, 36)
-    GateTitle.Position = UDim2.new(0, 10, 0, 18)
-    GateTitle.BackgroundTransparency = 1
-    GateTitle.Text = "⚠️ VOID SCRIPTS"
-    GateTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
-    GateTitle.Font = Enum.Font.Code
-    GateTitle.TextSize = 22
-    GateTitle.Parent = GateFrame
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "VoidKeySystem"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = CoreGui
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    local GateSub = Instance.new("TextLabel")
-    GateSub.Size = UDim2.new(1, -20, 0, 22)
-    GateSub.Position = UDim2.new(0, 10, 0, 52)
-    GateSub.BackgroundTransparency = 1
-    GateSub.Text = "JOIN DISCORD TO UNLOCK"
-    GateSub.TextColor3 = Color3.fromRGB(255, 200, 50)
-    GateSub.Font = Enum.Font.Code
-    GateSub.TextSize = 14
-    GateSub.Parent = GateFrame
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.BackgroundColor3 = Color3.fromRGB(5, 0, 12)
+    overlay.BackgroundTransparency = 0.3
+    overlay.BorderSizePixel = 0
+    overlay.Parent = screenGui
 
-    local GateInfo = Instance.new("TextLabel")
-    GateInfo.Size = UDim2.new(1, -30, 0, 40)
-    GateInfo.Position = UDim2.new(0, 15, 0, 82)
-    GateInfo.BackgroundTransparency = 1
-    GateInfo.Text = "You must join our Discord before using\nChest Farm. Link will be copied."
-    GateInfo.TextColor3 = Color3.fromRGB(190, 190, 190)
-    GateInfo.Font = Enum.Font.Code
-    GateInfo.TextSize = 13
-    GateInfo.TextWrapped = true
-    GateInfo.Parent = GateFrame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 400, 0, 540)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -270)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 2, 8)
+    mainFrame.BackgroundTransparency = 0
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    mainFrame.Parent = overlay
 
-    -- Join Discord Button
-    local JoinBtn = Instance.new("TextButton")
-    JoinBtn.Size = UDim2.new(0.85, 0, 0, 44)
-    JoinBtn.Position = UDim2.new(0.075, 0, 0, 135)
-    JoinBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-    JoinBtn.BorderSizePixel = 0
-    JoinBtn.Text = "💬  JOIN DISCORD"
-    JoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    JoinBtn.Font = Enum.Font.Code
-    JoinBtn.TextSize = 15
-    JoinBtn.Parent = GateFrame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 14)
+    corner.Parent = mainFrame
 
-    local JoinCorner = Instance.new("UICorner", JoinBtn)
-    JoinCorner.CornerRadius = UDim.new(0, 7)
+    local border = Instance.new("UIStroke")
+    border.Color = Color3.fromRGB(0, 255, 200)
+    border.Thickness = 2
+    border.Transparency = 0.4
+    border.Parent = mainFrame
 
-    -- Continue Button (locked)
-    local ContinueBtn = Instance.new("TextButton")
-    ContinueBtn.Size = UDim2.new(0.85, 0, 0, 44)
-    ContinueBtn.Position = UDim2.new(0.075, 0, 0, 192)
-    ContinueBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    ContinueBtn.BorderSizePixel = 1
-    ContinueBtn.BorderColor3 = Color3.fromRGB(60, 60, 60)
-    ContinueBtn.Text = "I JOINED → CONTINUE"
-    ContinueBtn.TextColor3 = Color3.fromRGB(100, 100, 100)
-    ContinueBtn.Font = Enum.Font.Code
-    ContinueBtn.TextSize = 14
-    ContinueBtn.AutoButtonColor = false
-    ContinueBtn.Parent = GateFrame
+    local glow1 = Instance.new("Frame")
+    glow1.Size = UDim2.new(1, 10, 1, 10)
+    glow1.Position = UDim2.new(0, -5, 0, -5)
+    glow1.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
+    glow1.BackgroundTransparency = 0.85
+    glow1.BorderSizePixel = 0
+    glow1.Parent = mainFrame
+    local g1Corner = Instance.new("UICorner")
+    g1Corner.CornerRadius = UDim.new(0, 16)
+    g1Corner.Parent = glow1
 
-    local ContCorner = Instance.new("UICorner", ContinueBtn)
-    ContCorner.CornerRadius = UDim.new(0, 7)
+    local glow2 = Instance.new("Frame")
+    glow2.Size = UDim2.new(1, 18, 1, 18)
+    glow2.Position = UDim2.new(0, -9, 0, -9)
+    glow2.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
+    glow2.BackgroundTransparency = 0.92
+    glow2.BorderSizePixel = 0
+    glow2.Parent = mainFrame
+    local g2Corner = Instance.new("UICorner")
+    g2Corner.CornerRadius = UDim.new(0, 20)
+    g2Corner.Parent = glow2
 
-    local hasClickedJoin = false
+    local headerFrame = Instance.new("Frame")
+    headerFrame.Name = "HeaderFrame"
+    headerFrame.Size = UDim2.new(1, -30, 0, 50)
+    headerFrame.Position = UDim2.new(0, 15, 0, 15)
+    headerFrame.BackgroundTransparency = 1
+    headerFrame.Parent = mainFrame
 
-    -- Join button
-    JoinBtn.MouseButton1Click:Connect(function()
-        pcall(function() setclipboard(DISCORD_LINK) end)
-        pcall(function() toclipboard(DISCORD_LINK) end)
+    local hubName = Instance.new("TextLabel")
+    hubName.Name = "HubName"
+    hubName.Size = UDim2.new(0.7, 0, 1, 0)
+    hubName.Position = UDim2.new(0, 0, 0, 0)
+    hubName.BackgroundTransparency = 1
+    hubName.Text = "⚠️ VOID SCRIPTS"
+    hubName.TextColor3 = Color3.fromRGB(0, 255, 200)
+    hubName.TextSize = 18
+    hubName.TextXAlignment = Enum.TextXAlignment.Left
+    hubName.Font = Enum.Font.GothamSemibold
+    hubName.Parent = headerFrame
 
+    local statusDot = Instance.new("Frame")
+    statusDot.Name = "StatusDot"
+    statusDot.Size = UDim2.new(0, 10, 0, 10)
+    statusDot.Position = UDim2.new(0.75, -5, 0.5, -5)
+    statusDot.BackgroundColor3 = Color3.fromRGB(79, 139, 107)
+    statusDot.BorderSizePixel = 0
+    statusDot.Parent = headerFrame
+    local dotCorner = Instance.new("UICorner")
+    dotCorner.CornerRadius = UDim.new(1, 0)
+    dotCorner.Parent = statusDot
+
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(0, 60, 0, 14)
+    statusText.Position = UDim2.new(0.78, 0, 0.5, -7)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "● ONLINE"
+    statusText.TextColor3 = Color3.fromRGB(0, 255, 0)
+    statusText.TextSize = 9
+    statusText.Font = Enum.Font.Code
+    statusText.TextXAlignment = Enum.TextXAlignment.Left
+    statusText.Parent = headerFrame
+
+    local exitButton = Instance.new("TextButton")
+    exitButton.Name = "ExitButton"
+    exitButton.Size = UDim2.new(0, 28, 0, 28)
+    exitButton.Position = UDim2.new(1, -30, 0, 10)
+    exitButton.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    exitButton.BackgroundTransparency = 0.5
+    exitButton.BorderSizePixel = 0
+    exitButton.Text = "✕"
+    exitButton.TextColor3 = Color3.fromRGB(200, 100, 100)
+    exitButton.TextSize = 14
+    exitButton.Font = Enum.Font.Gotham
+    exitButton.Parent = headerFrame
+    local exitCorner = Instance.new("UICorner")
+    exitCorner.CornerRadius = UDim.new(1, 0)
+    exitCorner.Parent = exitButton
+
+    exitButton.MouseEnter:Connect(function()
+        exitButton.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+    end)
+    exitButton.MouseLeave:Connect(function()
+        exitButton.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    end)
+    exitButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    local divider = Instance.new("Frame")
+    divider.Name = "Divider"
+    divider.Size = UDim2.new(1, -30, 0, 1)
+    divider.Position = UDim2.new(0, 15, 0, 70)
+    divider.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
+    divider.BackgroundTransparency = 0.6
+    divider.BorderSizePixel = 0
+    divider.Parent = mainFrame
+
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Name = "InfoLabel"
+    infoLabel.Size = UDim2.new(1, -30, 0, 25)
+    infoLabel.Position = UDim2.new(0, 15, 0, 80)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Text = "🔑 Enter your SHRTFLY key"
+    infoLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
+    infoLabel.TextSize = 13
+    infoLabel.TextXAlignment = Enum.TextXAlignment.Center
+    infoLabel.Font = Enum.Font.GothamBold
+    infoLabel.Parent = mainFrame
+
+    local inputFrame = Instance.new("Frame")
+    inputFrame.Name = "InputFrame"
+    inputFrame.Size = UDim2.new(1, -30, 0, 80)
+    inputFrame.Position = UDim2.new(0, 15, 0, 110)
+    inputFrame.BackgroundTransparency = 1
+    inputFrame.Parent = mainFrame
+
+    local keyInput = Instance.new("TextBox")
+    keyInput.Name = "KeyInput"
+    keyInput.Size = UDim2.new(1, -90, 0, 40)
+    keyInput.Position = UDim2.new(0, 0, 0, 0)
+    keyInput.BackgroundColor3 = Color3.fromRGB(0, 5, 10)
+    keyInput.BorderSizePixel = 2
+    keyInput.BorderColor3 = Color3.fromRGB(0, 255, 200)
+    keyInput.Text = ""
+    keyInput.TextColor3 = Color3.fromRGB(200, 210, 220)
+    keyInput.TextSize = 16
+    keyInput.Font = Enum.Font.Code
+    keyInput.PlaceholderText = "XXXX-XXXX-XXXX-XXXX"
+    keyInput.PlaceholderColor3 = Color3.fromRGB(60, 70, 80)
+    keyInput.ClearTextOnFocus = false
+    keyInput.Parent = inputFrame
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 6)
+    inputCorner.Parent = keyInput
+
+    local enterButton = Instance.new("TextButton")
+    enterButton.Name = "EnterButton"
+    enterButton.Size = UDim2.new(0, 80, 0, 40)
+    enterButton.Position = UDim2.new(1, -80, 0, 0)
+    enterButton.BackgroundColor3 = Color3.fromRGB(0, 40, 35)
+    enterButton.BorderSizePixel = 0
+    enterButton.Text = "ENTER"
+    enterButton.TextColor3 = Color3.fromRGB(0, 255, 200)
+    enterButton.TextSize = 13
+    enterButton.Font = Enum.Font.GothamBold
+    enterButton.Parent = inputFrame
+    local enterCorner = Instance.new("UICorner")
+    enterCorner.CornerRadius = UDim.new(0, 6)
+    enterCorner.Parent = enterButton
+
+    enterButton.MouseEnter:Connect(function()
+        enterButton.BackgroundColor3 = Color3.fromRGB(0, 60, 50)
+    end)
+    enterButton.MouseLeave:Connect(function()
+        enterButton.BackgroundColor3 = Color3.fromRGB(0, 40, 35)
+    end)
+
+    local formatHint = Instance.new("TextLabel")
+    formatHint.Name = "FormatHint"
+    formatHint.Size = UDim2.new(1, 0, 0, 20)
+    formatHint.Position = UDim2.new(0, 0, 0, 45)
+    formatHint.BackgroundTransparency = 1
+    formatHint.Text = "Format: XXXX-XXXX-XXXX-XXXX"
+    formatHint.TextColor3 = Color3.fromRGB(123, 138, 155)
+    formatHint.TextSize = 10
+    formatHint.TextXAlignment = Enum.TextXAlignment.Center
+    formatHint.Font = Enum.Font.Gotham
+    formatHint.Parent = inputFrame
+
+    local statusFrame = Instance.new("Frame")
+    statusFrame.Name = "StatusFrame"
+    statusFrame.Size = UDim2.new(1, -30, 0, 120)
+    statusFrame.Position = UDim2.new(0, 15, 0, 200)
+    statusFrame.BackgroundColor3 = Color3.fromRGB(0, 5, 10)
+    statusFrame.BackgroundTransparency = 0.3
+    statusFrame.BorderSizePixel = 1
+    statusFrame.BorderColor3 = Color3.fromRGB(0, 255, 200)
+    statusFrame.Parent = mainFrame
+    local statusCorner = Instance.new("UICorner")
+    statusCorner.CornerRadius = UDim.new(0, 6)
+    statusCorner.Parent = statusFrame
+
+    local statusTitle = Instance.new("TextLabel")
+    statusTitle.Size = UDim2.new(1, 0, 0, 25)
+    statusTitle.Position = UDim2.new(0, 10, 0, 0)
+    statusTitle.BackgroundTransparency = 1
+    statusTitle.Text = "📋 KEY STATUS"
+    statusTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
+    statusTitle.TextSize = 11
+    statusTitle.TextXAlignment = Enum.TextXAlignment.Left
+    statusTitle.Font = Enum.Font.Code
+    statusTitle.Parent = statusFrame
+
+    local keyStatusText = Instance.new("TextLabel")
+    keyStatusText.Size = UDim2.new(1, -20, 0, 80)
+    keyStatusText.Position = UDim2.new(0, 10, 0, 28)
+    keyStatusText.BackgroundTransparency = 1
+    keyStatusText.Text = "🔴 No key entered\n\n💡 Get your key from SHRTFLY\n   Format: XXXX-XXXX-XXXX-XXXX"
+    keyStatusText.TextColor3 = Color3.fromRGB(150, 150, 200)
+    keyStatusText.TextSize = 11
+    keyStatusText.TextXAlignment = Enum.TextXAlignment.Left
+    keyStatusText.Font = Enum.Font.Code
+    keyStatusText.Parent = statusFrame
+
+    local getKeyBtn = Instance.new("TextButton")
+    getKeyBtn.Size = UDim2.new(1, -20, 0, 35)
+    getKeyBtn.Position = UDim2.new(0, 10, 0, 330)
+    getKeyBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    getKeyBtn.BorderSizePixel = 0
+    getKeyBtn.Text = "🔗 GET YOUR SHRTFLY KEY"
+    getKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    getKeyBtn.TextSize = 13
+    getKeyBtn.Font = Enum.Font.GothamBold
+    getKeyBtn.Parent = mainFrame
+    local getKeyCorner = Instance.new("UICorner")
+    getKeyCorner.CornerRadius = UDim.new(0, 6)
+    getKeyCorner.Parent = getKeyBtn
+
+    getKeyBtn.MouseEnter:Connect(function()
+        getKeyBtn.BackgroundColor3 = Color3.fromRGB(104, 116, 250)
+    end)
+    getKeyBtn.MouseLeave:Connect(function()
+        getKeyBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    end)
+
+    local discordFrame = Instance.new("Frame")
+    discordFrame.Size = UDim2.new(1, -30, 0, 45)
+    discordFrame.Position = UDim2.new(0, 15, 0, 375)
+    discordFrame.BackgroundColor3 = Color3.fromRGB(0, 5, 10)
+    discordFrame.BackgroundTransparency = 0.3
+    discordFrame.BorderSizePixel = 1
+    discordFrame.BorderColor3 = Color3.fromRGB(0, 255, 200)
+    discordFrame.Parent = mainFrame
+    local discordCorner = Instance.new("UICorner")
+    discordCorner.CornerRadius = UDim.new(0, 6)
+    discordCorner.Parent = discordFrame
+
+    local discordLabel = Instance.new("TextLabel")
+    discordLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    discordLabel.Position = UDim2.new(0, 10, 0, 0)
+    discordLabel.BackgroundTransparency = 1
+    discordLabel.Text = "💬 JOIN OUR DISCORD"
+    discordLabel.TextColor3 = Color3.fromRGB(114, 137, 218)
+    discordLabel.TextSize = 10
+    discordLabel.TextXAlignment = Enum.TextXAlignment.Left
+    discordLabel.Font = Enum.Font.Code
+    discordLabel.Parent = discordFrame
+
+    local discordLink = Instance.new("TextLabel")
+    discordLink.Size = UDim2.new(1, -20, 0.5, 0)
+    discordLink.Position = UDim2.new(0, 10, 0.5, 0)
+    discordLink.BackgroundTransparency = 1
+    discordLink.Text = KeyConfig.DiscordLink
+    discordLink.TextColor3 = Color3.fromRGB(114, 137, 218)
+    discordLink.TextSize = 11
+    discordLink.Font = Enum.Font.Code
+    discordLink.TextXAlignment = Enum.TextXAlignment.Left
+    discordLink.Parent = discordFrame
+
+    local statusMessage = Instance.new("TextLabel")
+    statusMessage.Size = UDim2.new(1, -30, 0, 20)
+    statusMessage.Position = UDim2.new(0, 15, 0, 435)
+    statusMessage.BackgroundTransparency = 1
+    statusMessage.Text = "💡 Click 'Get Key' to get your SHRTFLY key"
+    statusMessage.TextColor3 = Color3.fromRGB(123, 138, 155)
+    statusMessage.TextSize = 10
+    statusMessage.TextXAlignment = Enum.TextXAlignment.Center
+    statusMessage.Font = Enum.Font.Gotham
+    statusMessage.Parent = mainFrame
+
+    local footer = Instance.new("TextLabel")
+    footer.Size = UDim2.new(1, -30, 0, 20)
+    footer.Position = UDim2.new(0, 15, 0, 460)
+    footer.BackgroundTransparency = 1
+    footer.Text = "void scripts · key system v2.0"
+    footer.TextColor3 = Color3.fromRGB(79, 95, 110)
+    footer.TextSize = 10
+    footer.TextXAlignment = Enum.TextXAlignment.Right
+    footer.Font = Enum.Font.Code
+    footer.Parent = mainFrame
+
+    local function showNotification(text, color)
+        local notif = Instance.new("Frame")
+        notif.Size = UDim2.new(0, 300, 0, 40)
+        notif.Position = UDim2.new(0.5, -150, 1, -60)
+        notif.BackgroundColor3 = Color3.fromRGB(0, 2, 8)
+        notif.BackgroundTransparency = 0.9
+        notif.BorderSizePixel = 1
+        notif.BorderColor3 = Color3.fromRGB(0, 255, 200)
+        notif.Parent = screenGui
+        
+        local notifCorner = Instance.new("UICorner")
+        notifCorner.CornerRadius = UDim.new(0, 12)
+        notifCorner.Parent = notif
+        
+        local notifText = Instance.new("TextLabel")
+        notifText.Size = UDim2.new(1, -20, 1, 0)
+        notifText.Position = UDim2.new(0, 10, 0, 0)
+        notifText.BackgroundTransparency = 1
+        notifText.Text = text
+        notifText.TextColor3 = color or Color3.fromRGB(200, 210, 220)
+        notifText.TextSize = 13
+        notifText.TextXAlignment = Enum.TextXAlignment.Center
+        notifText.Font = Enum.Font.Gotham
+        notifText.Parent = notif
+        
+        notif.Position = UDim2.new(0.5, -150, 1, -100)
+        task.wait(3)
+        notif:Destroy()
+    end
+
+    -- ==================== KEY VALIDATION ====================
+    local function isValidKeyFormat(key)
+        local pattern = "^[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]%-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]%-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]%-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]$"
+        return string.match(key, pattern) ~= nil
+    end
+
+    local function verifyKey(key)
+        print("🔑 KEY ENTERED: [" .. key .. "]")
+        print("📋 KEY LENGTH: " .. #key .. " characters")
+        
+        if not isValidKeyFormat(key) then
+            print("❌ INVALID FORMAT! Must be XXXX-XXXX-XXXX-XXXX")
+            return false, nil
+        end
+        
+        print("✅ KEY FORMAT VALID")
+        print("✅ KEY ACCEPTED!")
+        return true, "user"
+    end
+
+    -- ==================== BUTTON EVENTS ====================
+
+    getKeyBtn.MouseButton1Click:Connect(function()
         pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = "Discord Link Copied!",
-                Text = "Paste in browser / Discord app",
-                Duration = 4
-            })
+            setclipboard(KeyConfig.KeyLink)
+            showNotification("📋 SHRTFLY link copied to clipboard!", Color3.fromRGB(141, 218, 174))
+            statusMessage.Text = "✅ Link copied! Open browser and go to the link"
+            statusMessage.TextColor3 = Color3.fromRGB(141, 218, 174)
+            getKeyBtn.BackgroundColor3 = Color3.fromRGB(47, 90, 68)
         end)
-
-        hasClickedJoin = true
-        ContinueBtn.BackgroundColor3 = Color3.fromRGB(0, 45, 35)
-        ContinueBtn.BorderColor3 = Color3.fromRGB(0, 255, 150)
-        ContinueBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-        ContinueBtn.Text = "✅  I JOINED → CONTINUE"
-
-        JoinBtn.Text = "LINK COPIED!"
-        task.delay(1.6, function()
-            if JoinBtn and JoinBtn.Parent then
-                JoinBtn.Text = "💬  JOIN DISCORD"
-            end
-        end)
+        
+        task.wait(2)
+        statusMessage.Text = "💡 Paste your key (XXXX-XXXX-XXXX-XXXX) and click ENTER"
+        statusMessage.TextColor3 = Color3.fromRGB(123, 138, 155)
+        getKeyBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
     end)
 
-    -- Hover
-    JoinBtn.MouseEnter:Connect(function()
-        TweenService:Create(JoinBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(104, 116, 250)}):Play()
-    end)
-    JoinBtn.MouseLeave:Connect(function()
-        TweenService:Create(JoinBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(88, 101, 242)}):Play()
-    end)
-
-    ContinueBtn.MouseEnter:Connect(function()
-        if hasClickedJoin then
-            TweenService:Create(ContinueBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 65, 50)}):Play()
-        end
-    end)
-    ContinueBtn.MouseLeave:Connect(function()
-        if hasClickedJoin then
-            TweenService:Create(ContinueBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 45, 35)}):Play()
-        end
-    end)
-
-    -- Continue → Load main script
-    ContinueBtn.MouseButton1Click:Connect(function()
-        if not hasClickedJoin then
-            pcall(function()
-                StarterGui:SetCore("SendNotification", {
-                    Title = "Join Discord First!",
-                    Text = "Click JOIN DISCORD before continuing",
-                    Duration = 3
-                })
-            end)
+    enterButton.MouseButton1Click:Connect(function()
+        print("🔘 ENTER BUTTON CLICKED")
+        local enteredKey = string.upper(string.gsub(keyInput.Text, "%s+", ""))
+        
+        print("📝 RAW INPUT: [" .. keyInput.Text .. "]")
+        print("📝 CLEANED INPUT: [" .. enteredKey .. "]")
+        
+        if enteredKey == "" then
+            showNotification("⚠️ Please enter your key", Color3.fromRGB(217, 154, 168))
             return
         end
-
-        getgenv().VoidDiscordPassed = true
-        FreezePlayer(false)
-        if GateGui then GateGui:Destroy() end
-        LoadMainScript()
+        
+        if string.find(enteredKey, "SHRTSLUG") or string.find(enteredKey, "HTTPS://") then
+            showNotification("⚠️ Enter your key, not the link!", Color3.fromRGB(217, 154, 168))
+            keyInput.Text = ""
+            return
+        end
+        
+        local isValid, keyType = verifyKey(enteredKey)
+        
+        if isValid then
+            KeySystem.IsAuthenticated = true
+            KeySystem.UserTier = keyType
+            
+            showNotification("✅ Key accepted! Loading script...", Color3.fromRGB(141, 218, 174))
+            statusMessage.Text = "✅ Access granted! Loading..."
+            statusMessage.TextColor3 = Color3.fromRGB(141, 218, 174)
+            statusDot.BackgroundColor3 = Color3.fromRGB(79, 139, 107)
+            enterButton.BackgroundColor3 = Color3.fromRGB(0, 80, 60)
+            keyStatusText.Text = "✅ KEY VALID!\n\nAccess: GRANTED\nLoading Void Scripts..."
+            keyStatusText.TextColor3 = Color3.fromRGB(141, 218, 174)
+            keyInput.BorderColor3 = Color3.fromRGB(79, 139, 107)
+            
+            print("✅ KEY ACCEPTED - LOADING SCRIPT...")
+            
+            task.wait(1.5)
+            screenGui:Destroy()
+            -- LOAD MAIN SCRIPT DIRECTLY - SKIP DISCORD GATE
+            LoadMainScript()
+        else
+            showNotification("❌ Invalid key format! Use XXXX-XXXX-XXXX-XXXX", Color3.fromRGB(217, 154, 168))
+            statusMessage.Text = "❌ invalid format · use XXXX-XXXX-XXXX-XXXX"
+            statusMessage.TextColor3 = Color3.fromRGB(217, 154, 168)
+            keyStatusText.Text = "🔴 INVALID FORMAT\n\n❌ Must be: XXXX-XXXX-XXXX-XXXX"
+            keyStatusText.TextColor3 = Color3.fromRGB(217, 154, 168)
+            keyInput.BorderColor3 = Color3.fromRGB(200, 50, 50)
+            
+            local originalPos = keyInput.Position
+            for i = 1, 3 do
+                keyInput.Position = UDim2.new(0, 5, 0, 0)
+                task.wait(0.05)
+                keyInput.Position = UDim2.new(0, -5, 0, 0)
+                task.wait(0.05)
+            end
+            keyInput.Position = originalPos
+            
+            keyInput.Text = ""
+            task.wait(1)
+            keyInput.BorderColor3 = Color3.fromRGB(0, 255, 200)
+        end
     end)
 
-    -- Freeze player while gate is open
-    FreezePlayer(true)
-
-    return GateGui
-end
-
--- ==================== ANTI-DELETE LOOP ====================
-task.spawn(function()
-    while not getgenv().VoidDiscordPassed do
-        task.wait(0.4)
-        if not CoreGui:FindFirstChild("VoidDiscordGate") then
-            CreateDiscordGate()
+    keyInput:GetPropertyChangedSignal("Text"):Connect(function()
+        local text = keyInput.Text
+        local clean = string.gsub(text, "[^%w]", "")
+        local formatted = ""
+        for i = 1, #clean do
+            if i > 1 and i % 4 == 1 then
+                formatted = formatted .. "-"
+            end
+            formatted = formatted .. string.sub(clean, i, i)
         end
-    end
-end)
+        if formatted ~= text then
+            keyInput.Text = string.upper(formatted)
+        end
+    end)
 
--- Create gate immediately
-CreateDiscordGate()
+    keyInput.InputBegan:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.Return or input.KeyCode == Enum.KeyCode.KeypadEnter then
+            print("🔘 ENTER KEY PRESSED ON TEXTBOX")
+            enterButton.MouseButton1Click:Fire()
+        end
+    end)
+
+    print("============================================")
+    print("🔑 Void Scripts Key System Loaded!")
+    print("📋 SHRTFLY Link: " .. KeyConfig.KeyLink)
+    print("📋 ANY KEY in format XXXX-XXXX-XXXX-XXXX is valid")
+    print("============================================")
+end
 
 -- ==================== MAIN SCRIPT ====================
 function LoadMainScript()
+    print("✅✅✅ MAIN SCRIPT LOADING! ✅✅✅")
+    print("⚠️ VOID SCRIPTS - CHEST FARM V1.0.0.0.2")
+    
     -- ==================== CONFIG ====================
     getgenv().ChestFarm = {
         Enabled = false,
@@ -626,6 +920,7 @@ function LoadMainScript()
         AddConsole("RESET: CHEST COUNT CLEARED", Color3.fromRGB(255, 200, 0))
     end)
 
+    -- ==================== CHEST FARM FUNCTIONS ====================
     local function FindAllChests()
         local chests = {}
         local seen = {}
@@ -984,4 +1279,10 @@ function LoadMainScript()
     AddConsole("  ⚡+/- SPEED - Adjust flight speed", Color3.fromRGB(200, 200, 200))
     AddConsole("  ⟳ RESET - Reset chest counter", Color3.fromRGB(200, 200, 200))
     AddConsole("========================================", Color3.fromRGB(0, 255, 200))
+    
+    print("✅✅✅ CHEST FARM SCRIPT FULLY LOADED! ✅✅✅")
 end
+
+-- ==================== START ====================
+print("🚀 STARTING VOID SCRIPTS KEY SYSTEM...")
+ShowKeySystem()
